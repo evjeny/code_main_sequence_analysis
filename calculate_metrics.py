@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import glob
 import json
+from multiprocessing import Pool, cpu_count
 import os
 
 from config_manager.config import Config
@@ -88,10 +89,10 @@ def main(config: MetricsConfig):
 
     print(f"{len(repos)} repositories")
 
-    repo_data = {
-        repo_path.removeprefix(config.repos_folder): calculate_repo_metrics(repo_path)
-        for repo_path in repos
-    }
+    repo_data = dict()
+    with Pool(cpu_count()) as pool:
+        for repo_path, metrics in zip(repos, pool.map(calculate_repo_metrics, repos)):
+            repo_data[repo_path.removeprefix(config.repos_folder)] = metrics
 
     dump_metrics(config.output_json, repo_data)
 
