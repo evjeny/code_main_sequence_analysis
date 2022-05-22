@@ -1,12 +1,23 @@
+from dataclasses import dataclass
 import itertools
 import re
 
 import path_utils
 
 
+@dataclass
+class Dependencies:
+    depends_on: int
+    dependency_for: int
+    score: float
+
+
 def read_file(path: str) -> str:
-    with open(path) as f:
-        return f.read()
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except:
+        return ""
 
 
 def get_imports(file_content: str) -> list[str]:
@@ -22,7 +33,7 @@ def get_variability_score(depends_on: int, dependency_for: int) -> float:
     return depends_on / max(dependency_for + depends_on, 1)
 
 
-def get_variability(repo_path: str, java_files: list[str]) -> dict[tuple[str], float]:
+def get_variability(repo_path: str, java_files: list[str]) -> dict[tuple[str], Dependencies]:
     base_tuple = path_utils.get_path_tuple(repo_path)
 
     module_imports = {
@@ -45,6 +56,10 @@ def get_variability(repo_path: str, java_files: list[str]) -> dict[tuple[str], f
             module_stats[probable_module]["dependency_for"] += 1
     
     return {
-        module: get_variability_score(stats["depends_on"], stats["dependency_for"])
+        module: Dependencies(
+            depends_on=stats["depends_on"],
+            dependency_for=stats["dependency_for"],
+            score=get_variability_score(stats["depends_on"], stats["dependency_for"])
+        )
         for module, stats in module_stats.items()
     }

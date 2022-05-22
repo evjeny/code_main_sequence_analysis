@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import glob
+import json
 import os
 
 from config_manager.config import Config
@@ -15,7 +16,7 @@ class MetricsConfig(Config):
 
 @dataclass
 class RepoMetrics:
-    variability: float
+    variability: variability.Dependencies
     commit_count: list[int]
 
 
@@ -57,6 +58,25 @@ def calculate_repo_metrics(
     }
 
 
+def dump_metrics(path: str, repo_data: dict[str, dict[tuple[str], RepoMetrics]]):
+    with open(path, "w+") as f:
+        decoded = {
+            repo_name: [
+                {
+                    "/".join(module): {
+                        "depends_on": metrics.variability.depends_on,
+                        "dependency_for": metrics.variability.dependency_for,
+                        "dependency_score": metrics.variability.score,
+                        "commit_count": metrics.commit_count
+                    }
+                }
+                for module, metrics in repo_metrics.items()
+            ]
+            for repo_name, repo_metrics in repo_data.items()
+        }
+        f.write(json.dumps(decoded))
+
+
 def main(config: MetricsConfig):
     repos = list(filter(
         is_repo,
@@ -67,6 +87,13 @@ def main(config: MetricsConfig):
     ))
 
     print(f"{len(repos)} repositories")
+
+    repo_data = {
+        repo_path.removeprefix(config.repos_folder): calculate_repo_metrics(repo_path)
+        for repo_path in repos
+    }
+
+    dump_metrics(config.output_json, repo_data)
 
 
 if __name__ == "__main__":
