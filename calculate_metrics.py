@@ -4,6 +4,7 @@ import os
 
 from config_manager.config import Config
 
+import commits
 import variability
 
 
@@ -14,8 +15,8 @@ class MetricsConfig(Config):
 
 @dataclass
 class RepoMetrics:
-    abstractness: float
     variability: float
+    commit_count: list[int]
 
 
 def is_repo(path: str) -> bool:
@@ -27,12 +28,12 @@ def is_repo(path: str) -> bool:
 def calculate_repo_metrics(
     folder: str,
     java_extensions: tuple[str] = (".java", )
-) -> dict[str, RepoMetrics]:
+) -> dict[tuple[str], RepoMetrics]:
     """
     Arguments:
         folder: str -> path to repo folder
     Returns:
-        mapping [class_path, metrics]
+        mapping [class_path, metrics] -> metrics for each class
     """
 
     java_files = list(filter(
@@ -40,7 +41,20 @@ def calculate_repo_metrics(
         glob.glob(os.path.join(folder, "**"), recursive=True)
     ))
 
-    print(variability.get_variability(folder, java_files))
+    variabilities = variability.get_variability(folder, java_files)
+    changes_per_commit = commits.get_changes_count(folder, java_files)
+    
+    common_modules = set(variabilities.keys()).intersection(
+        set(changes_per_commit.keys())
+    )
+
+    return {
+        module: RepoMetrics(
+            variability=variabilities[module],
+            commit_count=changes_per_commit[module]
+        )
+        for module in common_modules
+    }
 
 
 def main(config: MetricsConfig):
@@ -53,10 +67,6 @@ def main(config: MetricsConfig):
     ))
 
     print(f"{len(repos)} repositories")
-
-    repo_path = repos[2]
-    print(repo_path)
-    calculate_repo_metrics(repo_path)
 
 
 if __name__ == "__main__":
