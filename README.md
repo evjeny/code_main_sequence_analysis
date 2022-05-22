@@ -3,7 +3,7 @@ how code variability and abstractivity influences number of changes per one comm
 
 ## TODO
 
-1. download github java repos (~200)
-2. calculate abs. and var. metrics
-3. get number of changes per commit
-4. plot abs.-var. -> #commits
+* [x] download github java repos (~200)
+* [ ] calculate abs. and var. metrics
+* [ ] get number of changes per commit
+* [ ] plot abs.-var. -> #commits
