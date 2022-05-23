@@ -26,7 +26,6 @@ def clone_repo(url: str, base_folder: str) -> bool:
         return True
     except:
         return False
-    
 
 
 def main(config: ScraperConfig):
