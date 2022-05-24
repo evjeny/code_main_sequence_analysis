@@ -62,17 +62,16 @@ def calculate_repo_metrics(
 def dump_metrics(path: str, repo_data: dict[str, dict[tuple[str], RepoMetrics]]):
     with open(path, "w+") as f:
         decoded = {
-            repo_name: [
-                {
-                    "/".join(module): {
-                        "depends_on": metrics.variability.depends_on,
-                        "dependency_for": metrics.variability.dependency_for,
-                        "dependency_score": metrics.variability.score,
-                        "commit_count": metrics.commit_count
-                    }
+            repo_name:
+            {
+                "/".join(module): {
+                    "depends_on": metrics.variability.depends_on,
+                    "dependency_for": metrics.variability.dependency_for,
+                    "dependency_score": metrics.variability.score,
+                    "commit_count": metrics.commit_count
                 }
                 for module, metrics in repo_metrics.items()
-            ]
+            }
             for repo_name, repo_metrics in repo_data.items()
         }
         f.write(json.dumps(decoded))
